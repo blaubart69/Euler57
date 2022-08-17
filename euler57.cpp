@@ -63,6 +63,55 @@ struct BigUInt {
             }
         }
     }
+    void add(const BigUInt& rhs)
+    {
+        auto a = this->buf.begin();
+        auto b =   rhs.buf.begin();
+
+        auto result = a;
+        const auto orig_a_end = this->buf.end();
+
+        char carry = 0;
+        
+
+        for (;;)
+        {
+            if ( a == orig_a_end && b == rhs.buf.end() )
+            {
+                if ( carry == 1 )
+                {
+                    this->buf.push_back(1);
+                }
+                break;
+            }
+
+            char val_a = a == this->buf.end() ? 0 : *a++;
+            char val_b = b ==   rhs.buf.end() ? 0 : *b++;
+            char sum = carry + val_a + val_b;
+
+            char sum_digit;
+            if ( sum < 10 ) 
+            {
+                sum_digit = sum;
+                carry = 0;
+            }
+            else
+            {
+                sum_digit = sum - 10;
+                carry = 1;
+            }
+
+            if ( result == orig_a_end )
+            {
+                this->buf.push_back(sum_digit);
+            }
+            else
+            {
+                *result = sum_digit;
+                ++result;
+            }
+        }
+    }
 };
 
 void print_iteration_result(const BigUInt& z, const BigUInt& n, int iteration)
@@ -74,8 +123,8 @@ void print_iteration_result(const BigUInt& z, const BigUInt& n, int iteration)
         );
 }
 
-int main() {
-
+void v1()
+{
     const int iterations = 1000;
 
     int iteration  = 1;
@@ -103,10 +152,52 @@ int main() {
         }
 
         iteration += 1;
-        
+
         z_sum.add(n, &z);   // 2 + ...
         std::swap(z,n);     // 1 / ...
     }
 
     printf("%d\n", found);
+}
+
+void v2()
+{
+    const int iterations = 1000;
+
+    int iteration  = 1;
+    BigUInt _z(1);
+    BigUInt _n(2);
+
+    BigUInt& z     = _z;
+    BigUInt& n     = _n;
+
+    int found = 0;
+
+    for (;;) {
+
+        z.add(n);
+
+        if ( z.buf.size() > n.buf.size() )
+        {
+            ++found;
+        }
+
+        if ( iteration == iterations ) {
+            break;
+        }
+
+        iteration += 1;
+
+        z.add(n);           // 2 + ...
+        std::swap(z,n);     // 1 / ...
+    }
+
+    printf("%d\n", found);
+
+}
+
+int main() {
+
+    v2();
+
 }
