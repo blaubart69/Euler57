@@ -1,12 +1,13 @@
-#include <stdio.h>
+#include <cstdio>
+#include <cstdint>
 
 #include <vector>
 #include <string>
 
 struct BigUInt {
-    std::vector<char> buf;
+    std::vector<uint8_t> buf;
 
-    BigUInt(char number)
+    BigUInt(uint8_t number)
     {
         buf.push_back( number );
     }
@@ -34,7 +35,7 @@ struct BigUInt {
         auto a = this->buf.begin();
         auto b =   rhs.buf.begin();
 
-        char carry = 0;
+        uint8_t carry = 0;
 
         for (;;)
         {
@@ -47,9 +48,9 @@ struct BigUInt {
                 break;
             }
 
-            char val_a = a == this->buf.end() ? 0 : *a++;
-            char val_b = b ==   rhs.buf.end() ? 0 : *b++;
-            char sum = carry + val_a + val_b;
+            uint8_t val_a = a == this->buf.end() ? 0 : *a++;
+            uint8_t val_b = b ==   rhs.buf.end() ? 0 : *b++;
+            uint8_t sum = carry + val_a + val_b;
 
             if ( sum < 10 ) 
             {
@@ -65,18 +66,21 @@ struct BigUInt {
     }
     void add(const BigUInt& rhs)
     {
-        auto a = this->buf.begin();
-        auto b =   rhs.buf.begin();
-
-        auto result = a;
         const auto orig_a_end = this->buf.end();
 
-        char carry = 0;
-        
+        auto a_read = this->buf.begin();
+        auto b_read =   rhs.buf.begin();
+
+        auto a_write = this->buf.begin();
+
+        uint8_t carry = 0;
 
         for (;;)
         {
-            if ( a == orig_a_end && b == rhs.buf.end() )
+            const bool a_ended = a_read == orig_a_end;
+            const bool b_ended = b_read == rhs.buf.end();
+
+            if ( a_ended && b_ended )
             {
                 if ( carry == 1 )
                 {
@@ -85,11 +89,11 @@ struct BigUInt {
                 break;
             }
 
-            char val_a = a == this->buf.end() ? 0 : *a++;
-            char val_b = b ==   rhs.buf.end() ? 0 : *b++;
-            char sum = carry + val_a + val_b;
+            const uint8_t val_a = a_ended ? 0 : *a_read++;
+            const uint8_t val_b = b_ended ? 0 : *b_read++;
+            const uint8_t sum   = carry + val_a + val_b;
 
-            char sum_digit;
+            uint8_t sum_digit;
             if ( sum < 10 ) 
             {
                 sum_digit = sum;
@@ -101,14 +105,14 @@ struct BigUInt {
                 carry = 1;
             }
 
-            if ( result == orig_a_end )
+            if ( a_write == orig_a_end )
             {
                 this->buf.push_back(sum_digit);
             }
             else
             {
-                *result = sum_digit;
-                ++result;
+                *a_write = sum_digit;
+                ++a_write;
             }
         }
     }
@@ -160,20 +164,17 @@ void v1()
     printf("%d\n", found);
 }
 
-void v2()
+size_t v2(const size_t iterations)
 {
-    const int iterations = 1000;
-
-    int iteration  = 1;
     BigUInt _z(1);
     BigUInt _n(2);
 
     BigUInt& z     = _z;
     BigUInt& n     = _n;
 
-    int found = 0;
+    size_t found = 0;
 
-    for (;;) {
+    for (int iteration  = 1; ;++iteration) {
 
         z.add(n);
 
@@ -186,18 +187,26 @@ void v2()
             break;
         }
 
-        iteration += 1;
-
         z.add(n);           // 2 + ...
         std::swap(z,n);     // 1 / ...
     }
 
-    printf("%d\n", found);
+    return found;    
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    v2();
+    size_t iterations;
 
+    if ( argc == 2 ) {
+        sscanf(argv[1], "%zu", &iterations);
+    }
+    else
+    {
+        iterations = 1000;
+    }
+    printf("iterations: %zu\n", iterations);
+    size_t found = v2(iterations);
+    printf("%zu\n", found);
 }
