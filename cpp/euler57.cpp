@@ -66,10 +66,10 @@ struct BigUInt {
     }
     void add(const BigUInt& rhs)
     {
-        const auto orig_a_end = this->buf.end();
+        const auto orig_a_end = this->buf.cend();
 
-        auto a_read = this->buf.begin();
-        auto b_read =   rhs.buf.begin();
+        auto a_read = this->buf.cbegin();
+        auto b_read =   rhs.buf.cbegin();
 
         auto a_write = this->buf.begin();
 
@@ -78,7 +78,7 @@ struct BigUInt {
         for (;;)
         {
             const bool a_ended = a_read == orig_a_end;
-            const bool b_ended = b_read == rhs.buf.end();
+            const bool b_ended = b_read == rhs.buf.cend();
 
             if ( a_ended && b_ended )
             {
@@ -190,6 +190,12 @@ size_t v2(const size_t iterations)
         z.add(n);           // 2 + ...
         std::swap(z,n);     // 1 / ...
     }
+
+    printf("length z: %zu"
+         "\nlength n: %zu"
+         "\n"
+         , z.buf.size()
+         , n.buf.size());
 
     return found;    
 
